@@ -1,39 +1,47 @@
 from flask import Flask
 
-import utils
+from utils import get_all, load_candidates, get_by_pk, get_by_skill
+
+FILENAME = 'candidates.json'
+data = get_all(load_candidates(FILENAME))
+
 
 app = Flask(__name__)
 
-candidates = utils.load_candidates()
 
-@app.route("/")
-def page_index():
-    str_candidates = '<pre>'
-    for candidate in candidates.values():
-        str_candidates += f"{candidate['name']} \n{candidate['position']} \n{candidate['skills']}\n\n"
-    str_candidates += '</pre>'
-    return str_candidates
-
-@app.route("/candidate/<int:id>")
-def profile(id):
-    candidate = candidates[id]
-    str_candidates = f"<img src={candidate['picture']}></img> <br>{candidate['name']} <br>{candidate['position']} <br>{candidate['skills']} <br><br>"
-    return str_candidates
-
-@app.route("/skills/<skill>")
-def skills(skill):
-    str_candidates = '<pre>'
-    for candidate in candidates.values():
-        skills_candidate = candidate['skills'].split(', ')
-        skills_candidate = [s.lower() for s in skills_candidate]
-        if skill in skills_candidate:
-            str_candidates += f"{candidate['name']} \n{candidate['position']} \n{candidate['skills']}\n\n"
-    str_candidates += '</pre>'
-    return str_candidates
-
-app.run(debug=True)
+@app.route('/')
+def index():
+    stroka = '<pre>'
+    for i in data:
+        stroka += f"{i} \n\n"
+    stroka += '</pre>'
+    return stroka
 
 
+@app.route("/candidates/<int:pk>")
+def get_user(pk):
+    user = get_by_pk(pk, data)
+    if user:
+        stroka = f"<img src = '{user.picture}'></img>"
+        stroka += f'<pre> {user} </pre>'
+    else:
+        stroka = "NOT FOUND"
+    return stroka
 
 
+@app.route("/skills/<x>")
+def get_users(x):
+    x = x.lower()
+    users = get_by_skill(x, data)
+    if users:
+        stroka = '<pre>'
+        for i in users:
+            stroka += f"{i} \n\n"
+        stroka += '</pre>'
+    else:
+        stroka = "NOT FOUND"
+    return stroka
 
+
+if __name__ == '__main__':
+    app.run(port=5000, debug=True)
